@@ -120,7 +120,8 @@ def test_should_finalize_with_deterministic_manifest_hash_over_chunk_hashes(tmp_
     expected = {"version": 1, "attempt_id": A1, "streams": {
         "camera": [{"seq": 0, "sha256": hashlib.sha256(b"AAA").hexdigest(), "size": 3},
                    {"seq": 1, "sha256": hashlib.sha256(b"BBB").hexdigest(), "size": 3}],
-        "screen": [{"seq": 0, "sha256": hashlib.sha256(b"SSS").hexdigest(), "size": 3}]}}
+        "screen": [{"seq": 0, "sha256": hashlib.sha256(b"SSS").hexdigest(), "size": 3}],
+        "justification": []}}
     blob = json.dumps(expected, sort_keys=True, separators=(",", ":")).encode()
     assert fin == {"manifest_hash": hashlib.sha256(blob).hexdigest(), "chunks": 3}
     assert (tmp_path / "data" / "recordings" / A1 / "manifest.json").read_bytes() == blob

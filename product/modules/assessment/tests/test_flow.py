@@ -66,7 +66,8 @@ def test_should_not_expose_answers_or_keys_in_item_views(world):
         assert banned not in text
     for item in started["items"]:
         assert set(item) <= {"item_id", "kind", "prompt", "code", "options", "title", "stage", "locked",
-                             "broken_code", "starter_code", "schema", "answered"}
+                             "broken_code", "starter_code", "schema", "answered",
+                             "scenario", "action_options", "evidence_options"}
 
 
 def test_should_keep_answers_and_resume_the_open_attempt(world):

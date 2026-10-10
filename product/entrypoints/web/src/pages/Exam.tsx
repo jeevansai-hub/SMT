@@ -79,6 +79,7 @@ function ExamRunner({ attempt }: { attempt: Attempt }) {
   const [runs, setRuns] = useState<Record<string, RunResult | 'running' | 'error'>>({});
   const [msg, setMsg] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
   const [confirmFinish, setConfirmFinish] = useState(false);
+  const [justifying, setJustifying] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const current = items[idx];
   const currentId = useRef<string | null>(current?.item_id ?? null);
@@ -451,7 +452,10 @@ function ExamRunner({ attempt }: { attempt: Attempt }) {
           confirmLabel="Finish level"
           cancelLabel="Keep working"
           onCancel={() => setConfirmFinish(false)}
-          onConfirm={() => void finish()}
+          onConfirm={() => {
+            setConfirmFinish(false);
+            setJustifying(true);
+          }}
         >
           <p>
             {unanswered > 0
@@ -459,6 +463,12 @@ function ExamRunner({ attempt }: { attempt: Attempt }) {
               : 'All questions have a saved answer. You cannot change answers after you finish.'}
           </p>
         </ConfirmDialog>
+      ) : null}
+      {justifying ? (
+        <JustificationStep
+          attemptId={attempt.attempt_id}
+          onDone={() => void finish()}
+        />
       ) : null}
       {finishing ? (
         <div className="lock-screen" role="status">
@@ -477,6 +487,106 @@ const STATUS_TEXT: Record<RunResult['status'], string> = {
   timeout: 'Your code took too long to run.',
   runner_unavailable: 'The checker is not available right now. Your work is saved. Try again.',
 };
+
+const JUSTIFY_MAX_S = 90;
+
+/** End-of-level voice justification: records a short clip of the learner explaining their
+ * approach, uploaded as one chunk under the "justification" stream. Reuses the already-granted
+ * camera+mic stream (capture.camera) - no new permission prompt. Never blocks submission: a
+ * recording failure or "Skip" both fall through to finish(). */
+function JustificationStep({ attemptId, onDone }: { attemptId: string; onDone: () => void }) {
+  const [state, setState] = useState<'idle' | 'recording' | 'uploading' | 'error'>('idle');
+  const [seconds, setSeconds] = useState(0);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
+  const timerRef = useRef<number | null>(null);
+
+  const stopTimer = () => {
+    if (timerRef.current != null) window.clearInterval(timerRef.current);
+    timerRef.current = null;
+  };
+
+  const start = () => {
+    const stream = capture.camera;
+    if (!stream || typeof MediaRecorder === 'undefined') {
+      setState('error');
+      return;
+    }
+    chunksRef.current = [];
+    const mime = ['video/webm;codecs=vp8,opus', 'video/webm'].find((m) => MediaRecorder.isTypeSupported(m));
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+    rec.ondataavailable = (ev) => {
+      if (ev.data && ev.data.size > 0) chunksRef.current.push(ev.data);
+    };
+    rec.onstop = () => void upload();
+    recorderRef.current = rec;
+    rec.start();
+    setState('recording');
+    setSeconds(0);
+    timerRef.current = window.setInterval(() => {
+      setSeconds((s) => {
+        if (s + 1 >= JUSTIFY_MAX_S) stop();
+        return s + 1;
+      });
+    }, 1000);
+  };
+
+  const stop = () => {
+    stopTimer();
+    try {
+      recorderRef.current?.stop();
+    } catch {
+      /* already stopped */
+    }
+  };
+
+  const upload = async () => {
+    setState('uploading');
+    try {
+      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      if (blob.size > 0) await api.chunk(attemptId, 'justification', 0, blob);
+    } catch {
+      /* best-effort: a failed upload never blocks the level from finishing */
+    }
+    onDone();
+  };
+
+  useEffect(() => () => stopTimer(), []);
+
+  return (
+    <div className="dialog-backdrop" role="alertdialog" aria-labelledby="justify-h">
+      <div className="dialog">
+        <h2 id="justify-h">Explain your approach</h2>
+        <p className="muted small">
+          Record up to {JUSTIFY_MAX_S} seconds: in your own words, explain and defend your solution. This is optional
+          and does not change your result.
+        </p>
+        {state === 'error' ? <Alert kind="warning">Recording is not available. You can still finish the level.</Alert> : null}
+        {state === 'recording' ? (
+          <p role="status">
+            <span className="rec-dot" aria-hidden="true" /> Recording — {seconds}s / {JUSTIFY_MAX_S}s
+          </p>
+        ) : null}
+        {state === 'uploading' ? <p role="status">Saving your recording…</p> : null}
+        <div className="row" style={{ marginTop: 'var(--space-4)' }}>
+          {state === 'idle' ? (
+            <button type="button" className="btn" onClick={start}>
+              Start recording
+            </button>
+          ) : null}
+          {state === 'recording' ? (
+            <button type="button" className="btn" onClick={stop}>
+              Stop and submit
+            </button>
+          ) : null}
+          <button type="button" className="btn quiet" disabled={state === 'uploading'} onClick={() => onDone()}>
+            Skip
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function RunPanel({ result }: { result: RunResult | 'running' | 'error' | undefined }) {
   if (!result || result === 'running') return null;

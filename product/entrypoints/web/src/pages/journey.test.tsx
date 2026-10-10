@@ -121,6 +121,7 @@ describe('learner critical journey (REQ: level attempt with consent, pre-checks,
     await userEvent.click(screen.getByRole('radio', { name: '3' }));
     await userEvent.click(screen.getByRole('button', { name: 'Finish level' }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Finish level' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Skip' }));
 
     // result
     expect(await screen.findByText('You passed this level. Your progress is saved.', {}, { timeout: 4000 })).toBeInTheDocument();

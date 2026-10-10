@@ -87,7 +87,7 @@ export const api = {
   finish: (id: string) => request<T.AttemptResult>('POST', `/attempts/${enc(id)}/finish`, {}),
   events: (id: string, events: T.IntegrityEvent[]) =>
     request<{ flagged?: boolean } | undefined>('POST', `/attempts/${enc(id)}/events`, events),
-  chunk: (id: string, stream: 'camera' | 'screen', seq: number, data: Blob) =>
+  chunk: (id: string, stream: 'camera' | 'screen' | 'justification', seq: number, data: Blob) =>
     request<void>('POST', `/attempts/${enc(id)}/chunks/${stream}/${seq}`, undefined, data),
   finalizeRecording: (id: string) => request<void>('POST', `/attempts/${enc(id)}/recording/finalize`, {}),
   interviewTurn: (id: string, answer_text: string) =>
@@ -143,7 +143,7 @@ export const api = {
   reviewCase: (id: string) => request<T.ReviewCase>('GET', `/review/cases/${enc(id)}`),
   decide: (id: string, b: { outcome: T.DecisionOutcome; reason: string }) =>
     request<T.DecisionRecorded>('POST', `/review/cases/${enc(id)}/decision`, b),
-  recordingUrl: (attemptId: string, stream: 'camera' | 'screen') =>
+  recordingUrl: (attemptId: string, stream: 'camera' | 'screen' | 'justification') =>
     `${BASE}/review/attempts/${enc(attemptId)}/recording/${stream}`,
 
   // recruiter

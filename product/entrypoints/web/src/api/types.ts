@@ -243,7 +243,7 @@ export interface ReviewCase {
   appeal_text?: string | null;
   transcript?: string[] | null;
   integrity: IntegritySummary;
-  streams: Array<'camera' | 'screen'>;
+  streams: Array<'camera' | 'screen' | 'justification'>;
   prior_decisions?: Array<{ outcome: string; reason: string; at: string }>;
 }
 export type DecisionOutcome = 'uphold' | 'change' | 'more_info';

@@ -116,6 +116,12 @@ export function ReviewQueuePage() {
   );
 }
 
+const STREAM_LABEL: Record<ReviewCase['streams'][number], string> = {
+  camera: 'Camera and microphone',
+  screen: 'Screen',
+  justification: 'Voice justification',
+};
+
 function Recording({ c }: { c: ReviewCase }) {
   if (c.streams.length === 0) return <p>No recording is available for this attempt.</p>;
   return (
@@ -127,10 +133,11 @@ function Recording({ c }: { c: ReviewCase }) {
             preload="none"
             src={api.recordingUrl(c.attempt_id, s)}
             style={{ width: '100%', background: '#000' }}
-            aria-label={`${s === 'camera' ? 'Camera and microphone' : 'Screen'} recording`}
+            aria-label={`${STREAM_LABEL[s]} recording`}
           />
           <figcaption className="small muted">
-            {s === 'camera' ? 'Camera and microphone' : 'Screen'}. A transcript is shown below where available.
+            {STREAM_LABEL[s]}
+            {s !== 'justification' ? '. A transcript is shown below where available.' : '.'}
           </figcaption>
         </figure>
       ))}

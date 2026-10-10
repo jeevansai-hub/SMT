@@ -33,7 +33,7 @@ REQUIRED_SCOPES = ("camera", "microphone", "screen", "events")
 EVENT_TYPES = ("focus_loss", "tab_hidden", "fullscreen_exit", "paste", "copy", "context_menu",
                "devtools_heuristic", "multi_display", "camera_lost", "screen_share_ended",
                "network_drop", "face_absent", "multiple_faces")
-STREAMS = ("camera", "screen")
+STREAMS = ("camera", "screen", "justification")
 MAX_CODE_BYTES = 20 * 1024
 MAX_EXPLANATION = 2000
 MAX_EVENTS = 100

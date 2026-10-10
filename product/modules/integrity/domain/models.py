@@ -15,7 +15,7 @@ EVENT_TYPES = (
     "devtools_heuristic", "multi_display", "camera_lost", "screen_share_ended",
     "network_drop", "face_absent", "multiple_faces", "instruction_like_text",
 )
-STREAMS = ("camera", "screen")
+STREAMS = ("camera", "screen", "justification")
 CONSENT_SCOPES = ("camera", "screen", "microphone", "events")
 SIMILARITY_FLAG = "similar_answer_values"
 
