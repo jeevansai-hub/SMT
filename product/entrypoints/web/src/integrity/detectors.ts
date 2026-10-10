@@ -78,26 +78,41 @@ export function attachDetectors(o: DetectorOptions): () => void {
     cleanups.push(() => t.removeEventListener('ended', h));
   });
 
-  // face presence, only where FaceDetector exists
+  // face presence and count, only where FaceDetector exists. maxDetectedFaces is raised to 2
+  // so the browser API can actually observe a second face; this never auto-penalizes, same
+  // as every other integrity signal here - it only surfaces a neutral flag for human review.
   const FD = (win as unknown as { FaceDetector?: new (o?: object) => FaceDetectorLike }).FaceDetector;
   if (FD && o.faceVideo) {
-    const detector = new FD({ fastMode: true, maxDetectedFaces: 1 });
-    let misses = 0;
-    let reported = false;
+    const detector = new FD({ fastMode: true, maxDetectedFaces: 2 });
+    let absentMisses = 0;
+    let absentReported = false;
+    let multiHits = 0;
+    let multiReported = false;
     const fi = setInterval(async () => {
       const v = o.faceVideo?.();
       if (!v || v.readyState < 2) return;
       try {
         const faces = await detector.detect(v);
         if (faces.length === 0) {
-          misses++;
-          if (misses >= 3 && !reported) {
-            reported = true;
+          absentMisses++;
+          multiHits = 0;
+          if (absentMisses >= 3 && !absentReported) {
+            absentReported = true;
             fire('face_absent');
           }
+        } else if (faces.length > 1) {
+          multiHits++;
+          absentMisses = 0;
+          absentReported = false;
+          if (multiHits >= 3 && !multiReported) {
+            multiReported = true;
+            fire('multiple_faces');
+          }
         } else {
-          misses = 0;
-          reported = false;
+          absentMisses = 0;
+          absentReported = false;
+          multiHits = 0;
+          multiReported = false;
         }
       } catch {
         /* detector unavailable at runtime: stay silent */

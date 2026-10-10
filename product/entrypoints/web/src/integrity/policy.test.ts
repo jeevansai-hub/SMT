@@ -14,7 +14,7 @@ describe('integrity wording', () => {
   });
 
   it('should_have_a_notice_for_every_event_type', () => {
-    expect(ALL_EVENT_TYPES).toHaveLength(12);
+    expect(ALL_EVENT_TYPES).toHaveLength(13);
     for (const t of ALL_EVENT_TYPES) expect(noticeFor(t).length).toBeGreaterThan(10);
   });
 });

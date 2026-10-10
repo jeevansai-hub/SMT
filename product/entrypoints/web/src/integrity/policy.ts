@@ -13,6 +13,7 @@ export const ALL_EVENT_TYPES: IntegrityEventType[] = [
   'screen_share_ended',
   'network_drop',
   'face_absent',
+  'multiple_faces',
 ];
 
 /** Neutral, factual, action-oriented. Never accusatory (build-brief section 4; ux-flows G-5/4.7). */
@@ -29,6 +30,7 @@ const NOTICES: Record<IntegrityEventType, string> = {
   screen_share_ended: 'Screen sharing stopped. Please share your entire screen again to continue.',
   network_drop: 'Your connection dropped. Your answers are kept and will send when you are back online.',
   face_absent: 'We could not see you in the camera. Please stay in view of the camera.',
+  multiple_faces: 'More than one face was seen in the camera. Please make sure you are alone for this level.',
 };
 
 export function noticeFor(t: IntegrityEventType): string {
@@ -51,6 +53,7 @@ const WEIGHTS: Record<IntegrityEventType, number> = {
   screen_share_ended: 1,
   network_drop: 0, // connection trouble is not a learner action
   face_absent: 1,
+  multiple_faces: 2,
 };
 
 export interface RecordResult {

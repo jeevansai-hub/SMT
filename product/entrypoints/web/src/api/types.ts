@@ -120,7 +120,8 @@ export type IntegrityEventType =
   | 'camera_lost'
   | 'screen_share_ended'
   | 'network_drop'
-  | 'face_absent';
+  | 'face_absent'
+  | 'multiple_faces';
 
 export interface IntegrityEvent {
   type: IntegrityEventType;

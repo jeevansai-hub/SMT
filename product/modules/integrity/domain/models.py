@@ -13,7 +13,7 @@ from typing import Any, Mapping
 EVENT_TYPES = (
     "focus_loss", "tab_hidden", "fullscreen_exit", "paste", "copy", "context_menu",
     "devtools_heuristic", "multi_display", "camera_lost", "screen_share_ended",
-    "network_drop", "face_absent", "instruction_like_text",
+    "network_drop", "face_absent", "multiple_faces", "instruction_like_text",
 )
 STREAMS = ("camera", "screen")
 CONSENT_SCOPES = ("camera", "screen", "microphone", "events")
@@ -22,7 +22,8 @@ SIMILARITY_FLAG = "similar_answer_values"
 DEFAULT_WEIGHTS: dict[str, float] = {
     "focus_loss": 1.0, "tab_hidden": 1.0, "fullscreen_exit": 2.0, "paste": 2.0, "copy": 1.0,
     "context_menu": 0.5, "devtools_heuristic": 2.0, "multi_display": 3.0, "camera_lost": 2.0,
-    "screen_share_ended": 3.0, "network_drop": 0.25, "face_absent": 1.0, "instruction_like_text": 1.0,
+    "screen_share_ended": 3.0, "network_drop": 0.25, "face_absent": 1.0, "multiple_faces": 2.0,
+    "instruction_like_text": 1.0,
     SIMILARITY_FLAG: 3.0,
 }
 

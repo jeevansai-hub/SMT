@@ -37,6 +37,7 @@ const EVENT_TEXT: Record<IntegrityEventType, string> = {
   screen_share_ended: 'Screen share ended',
   network_drop: 'Network drop',
   face_absent: 'Face not in view',
+  multiple_faces: 'More than one face in view',
 };
 
 export function ReviewQueuePage() {
