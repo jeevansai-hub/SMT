@@ -464,6 +464,28 @@
    ],
    "answer": ["a", "c"],
    "competency": "python"
+  },
+  {
+   "id": "py-l1-21",
+   "kind": "decision",
+   "prompt": "Decision Arena: A retailer's sales have increased this quarter, but its profit margin has declined. Choose the action the company should take, then select every piece of evidence below that supports it. Choosing unsupported evidence counts against the item, the same as choosing the wrong action.",
+   "scenario": "Quarterly report: Revenue up 18% year over year. Gross margin down from 42% to 31%. A new discount code (\"SAVE20\") was launched mid-quarter and was used on 61% of orders. Shipping costs per order rose 9% after a carrier contract change. Customer return rate is flat at 4%. Headcount in customer support grew 12% to handle order volume.",
+   "action_options": [
+    {"id": "act_a", "text": "Audit and tighten the discount code's eligibility rules before the next quarter"},
+    {"id": "act_b", "text": "Raise list prices across the board to restore margin immediately"},
+    {"id": "act_c", "text": "Cut customer support headcount back to the prior quarter's level"},
+    {"id": "act_d", "text": "Do nothing; the return rate is flat, so nothing is actually wrong"}
+   ],
+   "evidence_options": [
+    {"id": "ev_discount", "text": "The new discount code was used on 61% of orders this quarter"},
+    {"id": "ev_shipping", "text": "Shipping cost per order rose 9% after a carrier contract change"},
+    {"id": "ev_returns", "text": "Return rate is flat at 4% (not a driver of the margin change)"},
+    {"id": "ev_headcount", "text": "Support headcount grew 12% to keep pace with order volume (a consequence of higher sales, not a margin cause on its own)"},
+    {"id": "ev_revenue", "text": "Revenue grew 18% year over year (explains the sales increase, not the margin decline)"}
+   ],
+   "action": "act_a",
+   "evidence": ["ev_discount", "ev_shipping"],
+   "competency": "python"
   }
  ]
 }

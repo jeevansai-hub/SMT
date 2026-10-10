@@ -123,7 +123,9 @@ describe('Exam shell', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Run tests' }));
     const res = await screen.findByRole('region', { name: 'Test results' });
     expect(res).toHaveTextContent('Some checks did not pass.');
-    expect(res).toHaveTextContent('Not passed: test 2 - returned 41 rows, expected 38');
+    expect(res).toHaveTextContent('1 / 2 passed');
+    expect(res).toHaveTextContent('Not passed');
+    expect(res).toHaveTextContent('returned 41 rows, expected 38');
     expect(within(res).getByText('Missing:')).toBeInTheDocument();
     expect(within(res).getByText('Extra:')).toBeInTheDocument();
     expect(api.calls.find((c) => c.key === 'POST /attempts/att1/run')?.body).toMatchObject({ task_id: 't2' });

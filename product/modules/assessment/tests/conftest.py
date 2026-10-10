@@ -170,6 +170,12 @@ class World:
             if kind == "short":
                 return acc[0] if correct else "definitely wrong"
             return ans if correct else ["zz"]
+        if kind == "decision":
+            bank_item = self.bank_item(ref)
+            if correct:
+                return {"action": bank_item["action"], "evidence": bank_item["evidence"]}
+            wrong_action = next(o["id"] for o in bank_item["action_options"] if o["id"] != bank_item["action"])
+            return {"action": wrong_action, "evidence": []}
         if correct:
             ref_sol = REFS[ref]
             return ref_sol.get("code") or ref_sol["sql"]

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api/client';
-import type { Attempt, ExamItem, LevelProgress, RunResult } from '../api/types';
+import type { Attempt, DecisionAnswer, ExamItem, LevelProgress, RunResult } from '../api/types';
 import { useAuth } from '../auth/AuthContext';
 import { Alert, ConfirmDialog, ErrorPanel, Loading, useAsync } from '../components/ui';
 import { CodeEditor } from '../components/CodeEditor';
@@ -9,7 +9,7 @@ import { ExamTopBar, FullscreenGate, ProctorSidebar } from '../components/Procto
 import { useProctoring } from '../integrity/useProctoring';
 import { capture } from '../recording/session';
 
-type Answer = string | string[];
+type Answer = string | string[] | DecisionAnswer;
 
 // Per-level time limit in seconds (ADR-0004). L4 is the interview page's own timer.
 const LEVEL_DURATION_S: Record<number, number> = { 1: 8 * 60, 2: 15 * 60, 3: 25 * 60, 4: 20 * 60 };
@@ -64,7 +64,9 @@ function ExamRunner({ attempt }: { attempt: Attempt }) {
             ? []
             : (i.kind === 'code' || (i as any).kind === 'python' || (i as any).kind === 'sql')
               ? (i.starter_code ?? (i as any).broken_code ?? '')
-              : ''
+              : i.kind === 'decision'
+                ? ({ action: '', evidence: [] } satisfies DecisionAnswer)
+                : ''
         ),
       ]),
     ),
@@ -122,7 +124,11 @@ function ExamRunner({ attempt }: { attempt: Attempt }) {
   const saveCurrent = async (): Promise<boolean> => {
     if (!current) return true;
     const ans = answers[current.item_id];
-    const empty = Array.isArray(ans) ? ans.length === 0 : (ans ?? '').trim() === '';
+    const empty = Array.isArray(ans)
+      ? ans.length === 0
+      : typeof ans === 'object' && ans !== null
+        ? !(ans as DecisionAnswer).action
+        : (ans ?? '').trim() === '';
     if (empty) return true;
     try {
       await api.submitItem(attempt.attempt_id, {
@@ -296,6 +302,69 @@ function ExamRunner({ attempt }: { attempt: Attempt }) {
                     })}
                   </ul>
                 </fieldset>
+              ) : null}
+
+              {current.kind === 'decision' && current.action_options && current.evidence_options ? (
+                <div className="stack">
+                  {current.scenario ? (
+                    <div className="panel" aria-label="Scenario">
+                      <p style={{ margin: 0 }}>{current.scenario}</p>
+                    </div>
+                  ) : null}
+                  <fieldset>
+                    <legend>Choose the action the company should take</legend>
+                    <ul className="options">
+                      {current.action_options.map((o) => {
+                        const ans = (answers[current.item_id] as DecisionAnswer) ?? { action: '', evidence: [] };
+                        return (
+                          <li key={o.id}>
+                            <label className="option">
+                              <input
+                                type="radio"
+                                name={`decision-action-${current.item_id}`}
+                                checked={ans.action === o.id}
+                                onChange={() =>
+                                  setAnswers((s) => ({
+                                    ...s,
+                                    [current.item_id]: { ...(s[current.item_id] as DecisionAnswer), action: o.id },
+                                  }))
+                                }
+                              />
+                              <span>{o.text}</span>
+                            </label>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </fieldset>
+                  <fieldset>
+                    <legend>Select every piece of evidence that supports your choice</legend>
+                    <ul className="options">
+                      {current.evidence_options.map((o) => {
+                        const ans = (answers[current.item_id] as DecisionAnswer) ?? { action: '', evidence: [] };
+                        const checked = ans.evidence.includes(o.id);
+                        return (
+                          <li key={o.id}>
+                            <label className="option">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() =>
+                                  setAnswers((s) => {
+                                    const prev = (s[current.item_id] as DecisionAnswer) ?? { action: '', evidence: [] };
+                                    const evidence = checked ? prev.evidence.filter((x) => x !== o.id) : [...prev.evidence, o.id];
+                                    return { ...s, [current.item_id]: { ...prev, evidence } };
+                                  })
+                                }
+                              />
+                              <span>{o.text}</span>
+                            </label>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </fieldset>
+                </div>
               ) : null}
 
               {current.kind === 'short_answer' || (current.kind as string) === 'short' || current.kind === 'probe' ? (

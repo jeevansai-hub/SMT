@@ -37,6 +37,11 @@ def test_should_have_unique_item_ids_and_valid_l1_keys(track):
         if it["kind"] in ("single", "multi"):
             opt_ids = {o["id"] for o in it["options"]}
             assert set(it["answer"]) <= opt_ids
+        elif it["kind"] == "decision":
+            action_ids = {o["id"] for o in it["action_options"]}
+            evidence_ids = {o["id"] for o in it["evidence_options"]}
+            assert it["action"] in action_ids
+            assert set(it["evidence"]) <= evidence_ids and it["evidence"]
         else:
             assert it["accepted"]
 

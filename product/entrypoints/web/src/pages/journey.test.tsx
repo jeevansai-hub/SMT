@@ -88,7 +88,7 @@ describe('learner critical journey (REQ: level attempt with consent, pre-checks,
     await userEvent.click(screen.getByRole('button', { name: 'Agree and continue' }));
     expect(api.calls.find((c) => c.key === 'POST /attempts/att1/consent')?.body).toMatchObject({
       version: '2026-10-v1',
-      scopes: ['camera_microphone', 'screen', 'integrity_events'],
+      scopes: ['camera', 'microphone', 'screen', 'events'],
     });
 
     // 3 network with live gauge

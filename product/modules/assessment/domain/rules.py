@@ -168,6 +168,21 @@ def check_answer(item: Mapping[str, Any], variant: Mapping[str, Any], answer: An
         if not isinstance(answer, str):
             return False
         return _norm(answer) in {_norm(a) for a in accepted}
+    if kind == "decision":
+        # Decision Arena: the learner picks one action and the evidence that supports it.
+        # Both must match exactly - wrong or unsupported evidence choices fail the item the
+        # same way a wrong action does, so "avoid unsupported claims" is enforced by the
+        # scoring itself rather than a separate penalty dimension.
+        expected_action = variant.get("action", item.get("action"))
+        expected_evidence = set(variant.get("evidence", item.get("evidence", [])))
+        if not isinstance(answer, Mapping):
+            return False
+        given_action = answer.get("action")
+        given_evidence = answer.get("evidence")
+        if not isinstance(given_evidence, (list, tuple)):
+            return False
+        given_evidence_set = set(e for e in given_evidence if isinstance(e, str))
+        return given_action == expected_action and given_evidence_set == expected_evidence and len(given_evidence_set) == len(given_evidence)
     return False
 
 

@@ -39,7 +39,7 @@ export interface ChoiceOption {
   id: string;
   text: string;
 }
-export type ItemKind = 'single_choice' | 'multi_choice' | 'short_answer' | 'code' | 'probe';
+export type ItemKind = 'single_choice' | 'multi_choice' | 'short_answer' | 'code' | 'probe' | 'decision';
 export interface ExamItem {
   item_id: string;
   kind: ItemKind;
@@ -54,6 +54,14 @@ export interface ExamItem {
   answered?: boolean;
   saved_answer?: string | string[] | null;
   saved_explanation?: string | null;
+  // Decision Arena (kind: 'decision')
+  scenario?: string;
+  action_options?: ChoiceOption[];
+  evidence_options?: ChoiceOption[];
+}
+export interface DecisionAnswer {
+  action: string;
+  evidence: string[];
 }
 export interface InterviewPrompt {
   index: number;

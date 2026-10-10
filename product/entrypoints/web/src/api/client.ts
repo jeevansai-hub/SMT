@@ -3,11 +3,15 @@ import type * as T from './types';
 export class ApiError extends Error {
   readonly status: number;
   readonly reference: string;
-  constructor(status: number, reference: string) {
+  readonly code?: string;
+  readonly messageDetail?: string;
+  constructor(status: number, reference: string, code?: string, messageDetail?: string) {
     super(`HTTP ${status}`);
     this.name = 'ApiError';
     this.status = status;
     this.reference = reference;
+    this.code = code;
+    this.messageDetail = messageDetail;
   }
 }
 
@@ -39,7 +43,19 @@ async function request<R>(method: string, path: string, body?: unknown, raw?: Bo
   });
   if (!res.ok) {
     const ref = res.headers.get('x-request-id') ?? '';
-    throw new ApiError(res.status, ref);
+    let code: string | undefined;
+    let messageDetail: string | undefined;
+    try {
+      const text = await res.text();
+      if (text) {
+        const data = JSON.parse(text);
+        code = data?.error?.code;
+        messageDetail = data?.error?.message;
+      }
+    } catch {
+      // not json or text already consumed
+    }
+    throw new ApiError(res.status, ref, code, messageDetail);
   }
   if (res.status === 204) return undefined as R;
   const text = await res.text();
@@ -65,7 +81,7 @@ export const api = {
   attempt: (id: string) => request<T.Attempt>('GET', `/attempts/${enc(id)}`),
   consent: (id: string, b: { version: string; scopes: string[] }) => request<void>('POST', `/attempts/${enc(id)}/consent`, b),
   start: (id: string) => request<T.Attempt>('POST', `/attempts/${enc(id)}/start`, {}),
-  submitItem: (id: string, b: { item_id: string; answer: string | string[]; explanation?: string }) =>
+  submitItem: (id: string, b: { item_id: string; answer: string | string[] | T.DecisionAnswer; explanation?: string }) =>
     request<{ accepted: boolean }>('POST', `/attempts/${enc(id)}/submit-item`, b),
   run: (id: string, b: { task_id: string; code: string }) => request<T.RunResult>('POST', `/attempts/${enc(id)}/run`, b),
   finish: (id: string) => request<T.AttemptResult>('POST', `/attempts/${enc(id)}/finish`, {}),

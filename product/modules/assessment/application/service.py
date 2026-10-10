@@ -245,6 +245,10 @@ class AssessmentService:
                     view["code"] = code
                 if it["kind"] in ("single", "multi"):
                     view["options"] = [{"id": i, "text": opts[i]["text"]} for i in p["option_order"] if i in opts]
+                if it["kind"] == "decision":
+                    view["scenario"] = it.get("scenario")
+                    view["action_options"] = [{"id": o["id"], "text": o["text"]} for o in it["action_options"]]
+                    view["evidence_options"] = [{"id": o["id"], "text": o["text"]} for o in it["evidence_options"]]
             elif att.level == 2:
                 view = {"item_id": p["ref"], "kind": it["kind"], "title": it["title"], "prompt": it["prompt"],
                         "broken_code": it["broken_code"], "answered": answered}
@@ -335,6 +339,18 @@ class AssessmentService:
             if not isinstance(answer, str) or len(answer) > 200:
                 raise R.InvalidInput("answer")
             return answer
+        if it["kind"] == "decision":
+            valid_actions = {o["id"] for o in it.get("action_options", [])}
+            valid_evidence = {o["id"] for o in it.get("evidence_options", [])}
+            if not isinstance(answer, dict):
+                raise R.InvalidInput("answer")
+            action = answer.get("action")
+            evidence = answer.get("evidence")
+            if (not isinstance(action, str) or action not in valid_actions or
+                    not isinstance(evidence, list) or len(evidence) > len(valid_evidence) + 3 or
+                    any(not isinstance(e, str) or e not in valid_evidence for e in evidence)):
+                raise R.InvalidInput("answer")
+            return {"action": action, "evidence": evidence}
         if isinstance(answer, str):
             answer = [answer]
         valid = set(p["option_order"])
