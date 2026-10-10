@@ -946,8 +946,9 @@
 
             <div class="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2">
               <a
-                href="http://127.0.0.1:8000/lobby/1?track=python"
+                href="/api/auth/demo-session?track=python&redirect=/lobby/1?track=python"
                 target="_blank"
+                onclick="const p = window.location.port === '5173' ? 'http://127.0.0.1:8000' : ''; window.open(p + '/api/auth/demo-session?track=python&redirect=/lobby/1?track=python', '_blank'); return false;"
                 class="flex-1 py-3 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1018,8 +1019,9 @@
 
             <div class="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2">
               <a
-                href="http://127.0.0.1:8000/lobby/1?track=data_analyst"
+                href="/api/auth/demo-session?track=data_analyst&redirect=/lobby/1?track=data_analyst"
                 target="_blank"
+                onclick="const p = window.location.port === '5173' ? 'http://127.0.0.1:8000' : ''; window.open(p + '/api/auth/demo-session?track=data_analyst&redirect=/lobby/1?track=data_analyst', '_blank'); return false;"
                 class="flex-1 py-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

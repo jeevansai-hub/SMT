@@ -294,6 +294,8 @@ export interface ReceiptResult {
 export interface LedgerVerify {
   verified: boolean;
   entries: number;
+  head_hash?: string;
+  head_sequence?: number;
   first_failing_sequence?: number | null;
   message: string;
   canonicalisation: string;

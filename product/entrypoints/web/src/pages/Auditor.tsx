@@ -81,10 +81,32 @@ export function AuditPage() {
         <section className="panel" aria-labelledby="head">
           <h2 id="head">Details</h2>
           <dl>
-            <dt>Result</dt>
-            <dd>{res.message}</dd>
-            <dt>Canonicalisation rule</dt>
-            <dd className="mono">{res.canonicalisation}</dd>
+            {res.head_sequence ? (
+              <>
+                <dt>Head sequence</dt>
+                <dd>{res.head_sequence}</dd>
+              </>
+            ) : null}
+            {res.head_hash ? (
+              <>
+                <dt>Head hash</dt>
+                <dd className="mono" style={{ wordBreak: 'break-all' }}>
+                  {res.head_hash}
+                </dd>
+              </>
+            ) : null}
+            {res.message ? (
+              <>
+                <dt>Result</dt>
+                <dd>{res.message}</dd>
+              </>
+            ) : null}
+            {res.canonicalisation ? (
+              <>
+                <dt>Canonicalisation rule</dt>
+                <dd className="mono">{res.canonicalisation}</dd>
+              </>
+            ) : null}
           </dl>
           <button type="button" className="btn secondary" onClick={() => void copy()}>
             Copy result

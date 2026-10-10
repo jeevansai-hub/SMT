@@ -11,7 +11,7 @@ import { LEVEL_INFO } from './Path';
 
 const STEPS = ['Confirm', 'Consent', 'Network', 'Camera and mic', 'Screen', 'Full screen', 'Rules and start'] as const;
 export const CONSENT_VERSION = '2026-10-v1';
-const SCOPES = ['camera', 'microphone', 'screen', 'events'];
+const SCOPES = ['camera_microphone', 'screen', 'integrity_events'];
 
 export function LobbyPage() {
   const { level: levelParam } = useParams();
@@ -303,7 +303,7 @@ export function LobbyPage() {
             </div>
             <div className="check-row">
               <input id="agree" type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
-              <label htmlFor="agree">I understand, agree to be recorded, and will switch on all required device permissions.</label>
+              <label htmlFor="agree">I understand and I agree to be recorded, and will switch on all required device permissions.</label>
             </div>
             <div className="row">
               <Link className="btn quiet" to="/path">

@@ -80,6 +80,41 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         <button type="submit" className="btn" disabled={busy}>
           {busy ? 'Please wait' : mode === 'login' ? 'Sign in' : 'Create account'}
         </button>
+        {mode === 'login' ? (
+          <div style={{ marginTop: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <span className="eyebrow" style={{ textAlign: 'center', display: 'block' }}>Instant Role Sign-In</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)' }}>
+              <a
+                href="/api/auth/demo-session?role=recruiter&redirect=/hr"
+                className="btn secondary"
+                style={{ textAlign: 'center', fontSize: 'var(--text-xs)', padding: 'var(--space-2)' }}
+              >
+                👔 Recruiter Portal
+              </a>
+              <a
+                href="/api/auth/demo-session?role=auditor&redirect=/audit"
+                className="btn secondary"
+                style={{ textAlign: 'center', fontSize: 'var(--text-xs)', padding: 'var(--space-2)' }}
+              >
+                🛡️ Auditor / Admitter
+              </a>
+              <a
+                href="/api/auth/demo-session?role=reviewer&redirect=/review"
+                className="btn secondary"
+                style={{ textAlign: 'center', fontSize: 'var(--text-xs)', padding: 'var(--space-2)' }}
+              >
+                📝 Reviewer Console
+              </a>
+              <a
+                href="/api/auth/demo-session?role=learner&track=python&redirect=/path"
+                className="btn secondary"
+                style={{ textAlign: 'center', fontSize: 'var(--text-xs)', padding: 'var(--space-2)' }}
+              >
+                ⚡ Learner Sandbox
+              </a>
+            </div>
+          </div>
+        ) : null}
       </form>
       <p style={{ marginTop: 'var(--space-4)' }}>
         {mode === 'login' ? (

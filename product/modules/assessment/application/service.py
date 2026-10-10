@@ -238,64 +238,24 @@ class AssessmentService:
             if att.level == 1:
                 variant = ({} if p["variant"] == 0 else it["variants"][p["variant"] - 1])
                 opts = {o["id"]: o for o in variant.get("options", it.get("options", []))}
-                raw_kind = it.get("kind", "single")
-                kind_map = {
-                    "single": "single_choice",
-                    "multi": "multi_choice",
-                    "short": "short_answer",
-                    "single_choice": "single_choice",
-                    "multi_choice": "multi_choice",
-                    "short_answer": "short_answer",
-                }
-                kind = kind_map.get(raw_kind, raw_kind)
-                view = {
-                    "item_id": p["ref"],
-                    "kind": kind,
-                    "prompt": variant.get("prompt", it["prompt"]),
-                    "label": f"Question {len(items) + 1}",
-                    "answered": answered,
-                }
+                view = {"item_id": p["ref"], "kind": it["kind"], "prompt": variant.get("prompt", it["prompt"]),
+                        "answered": answered}
                 code = variant.get("code", it.get("code"))
                 if code is not None:
                     view["code"] = code
-                if raw_kind in ("single", "multi", "single_choice", "multi_choice"):
+                if it["kind"] in ("single", "multi"):
                     view["options"] = [{"id": i, "text": opts[i]["text"]} for i in p["option_order"] if i in opts]
             elif att.level == 2:
-                lang = "python" if it.get("kind") == "python" or att.track == "python" else "sql"
-                view = {
-                    "item_id": p["ref"],
-                    "task_id": p.get("ref"),
-                    "task_uuid": p.get("task_uuid"),
-                    "kind": "code",
-                    "language": lang,
-                    "title": it["title"],
-                    "label": it.get("title", f"Bugfix {len(items) + 1}"),
-                    "prompt": it["prompt"],
-                    "starter_code": it.get("broken_code", ""),
-                    "broken_code": it.get("broken_code", ""),
-                    "requires_explanation": True,
-                    "answered": answered,
-                }
+                view = {"item_id": p["ref"], "kind": it["kind"], "title": it["title"], "prompt": it["prompt"],
+                        "broken_code": it["broken_code"], "answered": answered}
                 if it.get("schema"):
                     view["schema"] = it["schema"]
             else:
                 st = it["stages"][p["stage"]]
                 base_ref = planning.item_ref(p["bank_id"], "base")
-                lang = "python" if it.get("kind") == "python" or att.track == "python" else "sql"
-                view = {
-                    "item_id": p["ref"],
-                    "task_id": p.get("ref"),
-                    "task_uuid": p.get("task_uuid"),
-                    "kind": "code",
-                    "language": lang,
-                    "title": it["title"],
-                    "label": f"{it.get('title', 'Task')} ({p['stage'].capitalize()})",
-                    "stage": p["stage"],
-                    "prompt": st["prompt"],
-                    "starter_code": st.get("starter_code", ""),
-                    "answered": answered,
-                    "locked": p["stage"] == "mutated" and base_ref not in answers,
-                }
+                view = {"item_id": p["ref"], "kind": it["kind"], "title": it["title"], "stage": p["stage"],
+                        "prompt": st["prompt"], "starter_code": st["starter_code"], "answered": answered,
+                        "locked": p["stage"] == "mutated" and base_ref not in answers}
                 if st.get("schema"):
                     view["schema"] = st["schema"]
             items.append(view)
@@ -467,7 +427,7 @@ class AssessmentService:
             ev_hash = f"ev_{att.seed[:8]}_{secrets.token_hex(4)}"
 
             result = {
-                "outcome": "passed" if ok else "not_passed",
+                "outcome": "passed" if ok else "failed",
                 "level": att.level,
                 "next_level": (att.level + 1) if (ok and att.level < 4) else None,
                 "all_passed": (ok and att.level == 4),

@@ -82,9 +82,15 @@ class ReviewService:
         log.info("review_case_enqueued", extra={"case_id": case_id, "reason": reason})
         return case_id
 
+    def _alias_for(self, learner_id: str, recipient_id: str = "internal_review") -> str:
+        try:
+            return self.identity.alias_for(learner_id, recipient_id)
+        except TypeError:
+            return self.identity.alias_for(learner_id) or f"cnd_{learner_id[:16]}"
+
     def _queue_row(self, c: dict) -> dict:
         return {
-            "case_id": c["case_id"], "alias": self.identity.alias_for(c["learner_id"]),
+            "case_id": c["case_id"], "alias": self._alias_for(c["learner_id"], "internal_review"),
             "reason": c["reason"], "uncertainty": c["uncertainty"],
             "confidence_label": "Low" if c["uncertainty"] >= 0.5 else "Moderate",
             "integrity_risk": c["integrity_risk"], "created_at": c["created_at"], "status": c["status"],
@@ -292,7 +298,7 @@ class ReviewService:
         built: list[tuple[str, str, dict, str]] = []
         head = self.evidence.head()
         for (learner, cmp_id), g in chosen.items():
-            alias = self.identity.alias_for(learner)
+            alias = self._alias_for(learner, request["recipient_id"])
             if refs and alias not in refs:
                 continue
             item = self._shared_item(learner, alias, cmp_id, g, head)
@@ -314,9 +320,9 @@ class ReviewService:
         }
 
     def _shared_item(self, learner: str, alias: str, cmp_id: str, grant: dict, head: dict) -> dict | None:
-        # scoring's competency names are bare ("python"), evidence/hr use the "cmp_" prefixed id
+        # scoring's competency names may be bare ("python") in production, or prefixed ("cmp_python") in test fakes
         scoring_competency = cmp_id[4:] if cmp_id.startswith("cmp_") else cmp_id
-        est = self.scoring.competency_estimate(learner, scoring_competency)
+        est = self.scoring.competency_estimate(learner, cmp_id) or self.scoring.competency_estimate(learner, scoring_competency)
         if not est:
             return None
         events = [e for e in self.evidence.list_for_learner(learner)

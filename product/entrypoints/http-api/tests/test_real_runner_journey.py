@@ -70,14 +70,14 @@ def _play(client, level):
 
 
 def _submit(client, aid, item):
-    if item["kind"] in ("single", "multi", "short"):
+    if item["kind"] in ("single", "multi", "short", "single_choice", "multi_choice", "short_answer"):
         answer = _l1_answer(item)
     else:
         ref = REFS[item["item_id"]]
         answer = ref.get("code") or ref["sql"]
     r = client.post(f"/api/attempts/{aid}/submit-item", json={"item_id": item["item_id"], "answer": answer})
     assert r.status_code == 200, r.text
-    if item["kind"] in ("python", "sql"):
+    if item["kind"] in ("python", "sql", "code"):
         assert r.json()["status"] == "passed", r.json()
 
 

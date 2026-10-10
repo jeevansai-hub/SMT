@@ -63,10 +63,16 @@ class InterviewService:
     def _key(self, learner_id: str, attempt_id: str) -> str:
         return f"{attempt_id}"
 
+    def _get_l3_solution(self, attempt_id: str, learner_id: str) -> dict | None:
+        try:
+            return self.assessment.l3_solution(attempt_id, learner_id)
+        except TypeError:
+            return self.assessment.l3_solution(learner_id)
+
     def state(self, learner_id: str, attempt_id: str) -> dict:
         sess = self.s.get("sessions", attempt_id)
         if sess is None:
-            if self.assessment.l3_solution(learner_id) is None:
+            if self._get_l3_solution(attempt_id, learner_id) is None:
                 raise NotFound()
             return {"state": "not_started", "prompt_count": len(sf.CRITERIA)}
         if sess["learner_id"] != learner_id:
@@ -87,7 +93,7 @@ class InterviewService:
         with self._lock(attempt_id):
             sess = self.s.get("sessions", attempt_id)
             if sess is None:
-                sol = self.assessment.l3_solution(learner_id)
+                sol = self._get_l3_solution(attempt_id, learner_id)
                 if sol is None:
                     raise NotFound()
                 if answer is not None and answer.strip():
@@ -137,7 +143,7 @@ class InterviewService:
     # ------------------------------------------------------------- finish
     def _finalize(self, sess: dict) -> dict:
         attempt_id, learner_id = sess["attempt_id"], sess["learner_id"]
-        sol = self.assessment.l3_solution(learner_id)
+        sol = self._get_l3_solution(attempt_id, learner_id)
         if sol is None:
             raise Unavailable("not_recorded")
         transcript = [{"role": t["role"], "criterion": t["criterion"], "text": t["text"]} for t in sess["turns"]]
@@ -242,9 +248,12 @@ class InterviewService:
         for e in todo:
             if e["idempotency_key"] in done:
                 continue
-            payload = {k: v for k, v in e.items()
-                       if k not in ("schema_version", "event_type", "learner_id", "idempotency_key")}
-            self.evidence.append(e["event_type"], e["learner_id"], payload, e["idempotency_key"])  # idempotent on idempotency_key
+            try:
+                self.evidence.append(e)  # idempotent on idempotency_key
+            except TypeError:
+                payload = {k: v for k, v in e.items()
+                           if k not in ("schema_version", "event_type", "learner_id", "idempotency_key")}
+                self.evidence.append(e["event_type"], e["learner_id"], payload, e["idempotency_key"])
             done.add(e["idempotency_key"])
             sess["steps"]["events"] = sorted(done)
             self.s.put("sessions", sess["attempt_id"], sess)

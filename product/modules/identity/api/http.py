@@ -123,3 +123,59 @@ def set_track(body: TrackBody, user: User = Depends(current_user)):
         raise _err(403, "forbidden", "Not permitted")
     runtime.service().set_track(user.id, body.track)
     return {"track": body.track}
+
+
+@router.get("/auth/demo-session")
+def demo_session(role: str = "learner", track: str = "python", redirect: Optional[str] = None):
+    from fastapi.responses import RedirectResponse
+    svc = runtime.service()
+    
+    # normalize role
+    role_norm = role.lower().strip()
+    if role_norm in ("admitter", "audit", "auditor"):
+        resolved_role = "auditor"
+    elif role_norm in ("hr", "recruiter"):
+        resolved_role = "recruiter"
+    elif role_norm in ("review", "reviewer"):
+        resolved_role = "reviewer"
+    else:
+        resolved_role = "learner"
+
+    email = f"demo-{resolved_role}@crucible.example"
+    display = f"Demo {resolved_role.capitalize()}"
+    
+    default_redirects = {
+        "learner": f"/lobby/1?track={track}",
+        "recruiter": "/hr",
+        "auditor": "/audit",
+        "reviewer": "/review",
+    }
+    target = redirect or default_redirects.get(resolved_role, "/path")
+
+    user = None
+    try:
+        found = svc._users.by_email(email)
+        if found:
+            user = found[0]
+            if resolved_role == "learner" and track in ("python", "data_analyst") and user.track != track:
+                svc.set_track(user.id, track)
+                user = svc.get(user.id)
+    except Exception:
+        pass
+    if user is None:
+        try:
+            user = svc.create_user(
+                email, "DemoPassword123!",
+                role=resolved_role,
+                display_name=display,
+                track=track if resolved_role == "learner" else None,
+            )
+        except Exception:
+            user = svc._users.by_email(email)[0]
+    token = svc.create_session_for_user(user)
+    resp = RedirectResponse(url=target, status_code=303)
+    resp.set_cookie(
+        runtime.COOKIE_NAME, token, max_age=svc.session_ttl_seconds,
+        httponly=True, samesite="lax", secure=runtime.cookie_secure(), path="/",
+    )
+    return resp

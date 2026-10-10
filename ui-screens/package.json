@@ -4,6 +4,8 @@
   "private": true,
   "description": "Pathway LMS Platform Dashboard - React UI screens connected to Firebase",
   "scripts": {
+    "start": "python ../product/entrypoints/http-api/serve.py",
+    "server": "python ../product/entrypoints/http-api/serve.py",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"

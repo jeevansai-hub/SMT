@@ -111,6 +111,12 @@ class IdentityService:
         self._sessions.create(self._digest(token), found[0].id, now + self._ttl, now)
         return found[0], token
 
+    def create_session_for_user(self, user: User) -> str:
+        now = self._clock()
+        token = secrets.token_urlsafe(32)
+        self._sessions.create(self._digest(token), user.id, now + self._ttl, now)
+        return token
+
     def logout(self, token: Optional[str]) -> None:
         if token:
             self._sessions.delete(self._digest(token))

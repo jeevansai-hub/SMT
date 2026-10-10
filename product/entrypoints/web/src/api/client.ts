@@ -80,11 +80,25 @@ export const api = {
   // learner
   profile: () => request<T.Profile>('GET', '/me/profile'),
   evidence: async (): Promise<T.EvidenceOverview> => {
-    const [items, grants] = await Promise.all([
-      request<{ items: T.EvidenceItem[] }>('GET', '/me/evidence'),
-      request<{ grants: T.Grant[] }>('GET', '/me/grants'),
-    ]);
-    return { evidence_items: items.items, grants: grants.grants };
+    let items: T.EvidenceItem[] = [];
+    let grants: T.Grant[] = [];
+    try {
+      const res = await request<any>('GET', '/me/evidence');
+      if (Array.isArray(res?.items)) items = res.items;
+      else if (Array.isArray(res?.evidence_items)) items = res.evidence_items;
+      if (Array.isArray(res?.grants)) grants = res.grants;
+    } catch {
+      // ignore
+    }
+    if (!grants.length) {
+      try {
+        const gRes = await request<{ grants: T.Grant[] }>('GET', '/me/grants');
+        if (Array.isArray(gRes?.grants)) grants = gRes.grants;
+      } catch {
+        // ignore
+      }
+    }
+    return { evidence_items: items, grants };
   },
   createGrant: (b: T.GrantRequest) =>
     request<T.Grant>('POST', '/me/grants', {
@@ -93,7 +107,17 @@ export const api = {
       expires_at: b.expires_at,
       consent_text_version: '1.0',
     }),
-  revokeGrant: (grant_id: string) => request<void>('DELETE', `/me/grants/${enc(grant_id)}`),
+  revokeGrant: async (grant_id: string) => {
+    try {
+      await request<void>('DELETE', `/me/grants/${enc(grant_id)}`);
+    } catch (err: any) {
+      if (err?.status === 404) {
+        await request<void>('DELETE', '/me/grants', { grant_id });
+        return;
+      }
+      throw err;
+    }
+  },
   appeals: () => request<{ appeals: T.Appeal[] }>('GET', '/me/appeals'),
   createAppeal: (b: { event_id?: string; text: string }) =>
     request<T.Appeal>('POST', '/me/appeals', { event_id: b.event_id ?? '', reason: b.text }),
@@ -117,12 +141,16 @@ export const api = {
 
   // auditor
   verifyLedger: async (): Promise<T.LedgerVerify> => {
-    const r = await request<{
-      ok: boolean; entries_checked: number; first_failure: number | null;
-      message: string; canonicalisation: string;
-    }>('GET', '/audit/ledger/verify');
-    return { verified: r.ok, entries: r.entries_checked, first_failing_sequence: r.first_failure,
-             message: r.message, canonicalisation: r.canonicalisation };
+    const r = await request<any>('GET', '/audit/ledger/verify');
+    return {
+      verified: r.verified !== undefined ? Boolean(r.verified) : Boolean(r.ok),
+      entries: r.entries ?? r.entries_checked ?? 0,
+      head_hash: r.head_hash ?? '',
+      head_sequence: r.head_sequence ?? r.entries_checked ?? 0,
+      first_failing_sequence: r.first_failing_sequence ?? r.first_failure ?? null,
+      message: r.message ?? '',
+      canonicalisation: r.canonicalisation ?? '',
+    };
   },
 };
 

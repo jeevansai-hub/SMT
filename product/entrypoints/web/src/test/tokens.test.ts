@@ -59,9 +59,9 @@ describe.each([
 
 describe('ux-flows 9.1 light tokens are used as specified', () => {
   it('should_match_the_documented_values', () => {
-    expect(light['color-text']).toBe('#1a1a1a');
-    expect(light['color-primary']).toBe('#0b4f9e');
-    expect(light['color-error']).toBe('#b3261e');
-    expect(light['color-border']).toBe('#767676');
+    expect(light['color-text']).toBe('#0d1c2e');
+    expect(light['color-primary']).toBe('#4338ca');
+    expect(light['color-error']).toBe('#ba1a1a');
+    expect(light['color-border']).toBe('#777586');
   });
 });

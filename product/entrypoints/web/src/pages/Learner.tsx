@@ -51,7 +51,7 @@ export function ResultPage() {
                 </h2>
                 <p style={{ margin: 0, marginTop: '0.25rem' }}>
                   {a.data.result.outcome === 'passed'
-                    ? 'You passed this level. Your verified progress and tamper-evident proof have been permanently recorded.'
+                    ? 'You passed this level. Your progress is saved.'
                     : a.data.result.outcome === 'in_review'
                       ? 'We are not sure about part of this result. A person will check it. Your current result stays visible until then.'
                       : 'This level was not passed this time. You can try again with a fresh set. Your earlier attempts are kept.'}
