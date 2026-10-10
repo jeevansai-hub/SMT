@@ -268,7 +268,7 @@ export function LobbyPage() {
             </span>
             MANDATORY SYSTEM PERMISSIONS REQUIREMENT
           </span>
-          <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>
             Proctored Assessment Flow
           </span>
         </div>

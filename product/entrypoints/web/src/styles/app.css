@@ -522,32 +522,33 @@ tbody tr:hover { background: #f8faff; }
    MANDATORY SYSTEM PERMISSION BANNER (IMAGE 1 COMPONENT)
    ========================================================= */
 .lms-requirement-banner {
-  background: #1e2238;
+  background: var(--color-warning-bg);
+  border: 1px solid #fcd34d;
   border-radius: var(--radius-lg);
   padding: 24px;
-  color: #ffffff;
+  color: var(--color-text);
   margin-bottom: var(--space-5);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 .lms-requirement-header {
   display: flex; align-items: center; justify-content: space-between;
   gap: 16px; margin-bottom: 12px; flex-wrap: wrap;
 }
 .lms-badge-gold {
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  color: #fbbf24;
+  background: #fde68a;
+  border: 1px solid #f5b70e;
+  color: var(--color-warning-text);
   padding: 4px 12px; border-radius: var(--radius-full);
   font-size: 0.6875rem; font-weight: 800;
   letter-spacing: 0.05em; text-transform: uppercase;
   display: inline-flex; align-items: center; gap: 6px;
 }
 .lms-requirement-banner h3 {
-  color: #ffffff !important; font-size: 1.15rem; font-weight: 700;
+  color: var(--color-text) !important; font-size: 1.15rem; font-weight: 700;
   margin: 0 0 6px;
 }
 .lms-requirement-banner p {
-  color: #94a3b8; font-size: var(--text-sm); margin: 0 0 16px;
+  color: var(--color-text-muted); font-size: var(--text-sm); margin: 0 0 16px;
   max-width: 80ch;
 }
 .lms-permission-chips {
@@ -556,11 +557,11 @@ tbody tr:hover { background: #f8faff; }
   gap: 10px;
 }
 .lms-permission-chip {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #ffffff;
+  border: 1px solid #fcd34d;
   border-radius: 10px; padding: 10px 14px;
   display: flex; align-items: center; gap: 8px;
-  font-size: var(--text-xs); font-weight: 600; color: #cbd5e1;
+  font-size: var(--text-xs); font-weight: 600; color: var(--color-text);
 }
 
 /* Stepper Wizard in Lobby */
