@@ -55,27 +55,7 @@
   --target: 40px;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-text: #eef1f5;
-    --color-text-muted: #c4cbd6;
-    --color-surface: #0d1117;
-    --color-surface-alt: #161b24;
-    --color-surface-raised: #1b2130;
-    --color-border: #8c96a6;
-    --color-border-soft: #2b3344;
-    --color-primary: #a5a0ff;
-    --color-primary-strong: #c3c0ff;
-    --color-on-primary: #1a1240;
-    --color-accent: #5fe0b6;
-    --color-focus: #a5a0ff;
-    --color-success: #7fd49b;
-    --color-warning-text: #ffd98a;
-    --color-warning-bg: #3a2c0c;
-    --color-error: #ff9a92;
-    --color-neutral-chip-bg: #232b3b;
-  }
-}
+/* Dark mode removed by Founder decision: product is light-only, matching the LMS portal. */
 
 *, *::before, *::after { box-sizing: border-box; }
 html { font-size: 100%; -webkit-text-size-adjust: 100%; }
