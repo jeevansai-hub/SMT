@@ -3,16 +3,25 @@ import type { Level, LevelProgress } from '../api/types';
 import { FLAGGED_MESSAGE } from '../integrity/policy';
 import type { Proctoring } from '../integrity/useProctoring';
 
+function fmtRemaining(sec: number): string {
+  const s = Math.max(0, Math.floor(sec));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${r.toString().padStart(2, '0')}`;
+}
+
 export function ExamTopBar({
   alias,
   level,
   levels,
   p,
+  remainingSec,
 }: {
   alias: string;
   level: Level;
   levels: LevelProgress[];
   p: Proctoring;
+  remainingSec?: number | null;
 }) {
   const conn = !p.online ? 'Offline. Your answers are kept.' : p.upload.stalled ? 'Reconnecting. Recording will catch up.' : 'Connected';
   return (
@@ -22,6 +31,11 @@ export function ExamTopBar({
         <span className="muted small">
           Candidate <span className="mono">{alias}</span>
         </span>
+        {remainingSec != null ? (
+          <span className={`chip ${remainingSec <= 120 ? 'warning' : ''}`} role="timer" aria-live="polite">
+            <span aria-hidden="true">⏱</span> {fmtRemaining(remainingSec)} left
+          </span>
+        ) : null}
       </div>
       <nav aria-label="Level progress">
         <ol className="level-steps">

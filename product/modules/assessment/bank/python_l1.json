@@ -343,6 +343,127 @@
     "a"
    ],
    "competency": "python"
+  },
+  {
+   "id": "py-l1-13",
+   "kind": "single",
+   "prompt": "What does this program print?",
+   "code": "def outer():\n    x = 1\n    def inner():\n        nonlocal x\n        x += 1\n        return x\n    return inner()\n\nprint(outer())",
+   "options": [
+    {"id": "a", "text": "1"},
+    {"id": "b", "text": "2"},
+    {"id": "c", "text": "It raises an error"},
+    {"id": "d", "text": "None"}
+   ],
+   "answer": ["b"],
+   "variants": [
+    {
+     "code": "def outer():\n    x = 5\n    def inner():\n        nonlocal x\n        x *= 2\n        return x\n    return inner()\n\nprint(outer())",
+     "options": [
+      {"id": "a", "text": "5"},
+      {"id": "b", "text": "10"},
+      {"id": "c", "text": "It raises an error"},
+      {"id": "d", "text": "None"}
+     ],
+     "answer": ["b"]
+    }
+   ],
+   "competency": "python"
+  },
+  {
+   "id": "py-l1-14",
+   "kind": "multi",
+   "prompt": "Select every statement that is true about Python generators.",
+   "options": [
+    {"id": "a", "text": "A function with `yield` returns a generator object when called"},
+    {"id": "b", "text": "Generators compute all values eagerly before returning"},
+    {"id": "c", "text": "You can only iterate a generator once"},
+    {"id": "d", "text": "`next()` resumes a generator from where it last paused"}
+   ],
+   "answer": ["a", "c", "d"],
+   "competency": "python"
+  },
+  {
+   "id": "py-l1-15",
+   "kind": "short",
+   "prompt": "What does this print?",
+   "code": "print(\"-\".join(str(n) for n in range(3)))",
+   "accepted": ["0-1-2"],
+   "variants": [
+    {
+     "code": "print(\",\".join(str(n) for n in range(4)))",
+     "accepted": ["0,1,2,3"]
+    }
+   ],
+   "competency": "python"
+  },
+  {
+   "id": "py-l1-16",
+   "kind": "single",
+   "prompt": "What is printed?",
+   "code": "try:\n    1 / 0\nexcept ZeroDivisionError:\n    print(\"a\")\nelse:\n    print(\"b\")\nfinally:\n    print(\"c\")",
+   "options": [
+    {"id": "a", "text": "a then c"},
+    {"id": "b", "text": "b then c"},
+    {"id": "c", "text": "a, b, c"},
+    {"id": "d", "text": "just c"}
+   ],
+   "answer": ["a"],
+   "competency": "python"
+  },
+  {
+   "id": "py-l1-17",
+   "kind": "single",
+   "prompt": "Which call correctly uses `*args` and `**kwargs` together in a call to `f(a, b, x=1, y=2)`?",
+   "options": [
+    {"id": "a", "text": "f(*[a, b], **{'x': 1, 'y': 2})"},
+    {"id": "b", "text": "f(**[a, b], *{'x': 1, 'y': 2})"},
+    {"id": "c", "text": "f([a, b], {'x': 1, 'y': 2})"},
+    {"id": "d", "text": "f(*a, *b, *x, *y)"}
+   ],
+   "answer": ["a"],
+   "competency": "python"
+  },
+  {
+   "id": "py-l1-18",
+   "kind": "short",
+   "prompt": "What number does this print?",
+   "code": "print(sum(n for n in range(10) if n % 3 == 0))",
+   "accepted": ["18"],
+   "variants": [
+    {
+     "code": "print(sum(n for n in range(10) if n % 2 == 0))",
+     "accepted": ["20"]
+    }
+   ],
+   "competency": "python"
+  },
+  {
+   "id": "py-l1-19",
+   "kind": "single",
+   "prompt": "What does this print?",
+   "code": "class Counter:\n    count = 0\n    def __init__(self):\n        Counter.count += 1\n\nCounter()\nCounter()\nprint(Counter.count)",
+   "options": [
+    {"id": "a", "text": "0"},
+    {"id": "b", "text": "1"},
+    {"id": "c", "text": "2"},
+    {"id": "d", "text": "It raises an error"}
+   ],
+   "answer": ["c"],
+   "competency": "python"
+  },
+  {
+   "id": "py-l1-20",
+   "kind": "multi",
+   "prompt": "Select every expression that evaluates to a falsy value.",
+   "options": [
+    {"id": "a", "text": "()"},
+    {"id": "b", "text": "[0]"},
+    {"id": "c", "text": "{}"},
+    {"id": "d", "text": "\" \""}
+   ],
+   "answer": ["a", "c"],
+   "competency": "python"
   }
  ]
 }

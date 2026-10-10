@@ -11,6 +11,9 @@ import { capture } from '../recording/session';
 
 type Answer = string | string[];
 
+// Per-level time limit in seconds (ADR-0004). L4 is the interview page's own timer.
+const LEVEL_DURATION_S: Record<number, number> = { 1: 8 * 60, 2: 15 * 60, 3: 25 * 60, 4: 20 * 60 };
+
 export function ExamPage() {
   const { attemptId = '' } = useParams();
   const a = useAsync(() => api.attempt(attemptId), [attemptId]);
@@ -87,6 +90,33 @@ function ExamRunner({ attempt }: { attempt: Attempt }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx]);
 
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
+
+  // Timed level (ADR-0004: overrides the PRD's no-timer accessibility default by Founder
+  // decision). Deadline is anchored client-side on first mount and survives a page reload
+  // via sessionStorage, keyed per attempt so switching levels/attempts doesn't inherit it.
+  const [remainingSec, setRemainingSec] = useState<number | null>(null);
+  const autoSubmitted = useRef(false);
+  useEffect(() => {
+    const key = `crucible-deadline-${attempt.attempt_id}`;
+    let deadline = Number(sessionStorage.getItem(key));
+    if (!deadline) {
+      deadline = Date.now() + LEVEL_DURATION_S[attempt.level] * 1000;
+      sessionStorage.setItem(key, String(deadline));
+    }
+    const tick = () => setRemainingSec(Math.max(0, Math.round((deadline - Date.now()) / 1000)));
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [attempt.attempt_id, attempt.level]);
+
   const levels: LevelProgress[] = progress.data?.levels ?? [];
 
   const saveCurrent = async (): Promise<boolean> => {
@@ -144,6 +174,14 @@ function ExamRunner({ attempt }: { attempt: Attempt }) {
     }
   };
 
+  useEffect(() => {
+    if (remainingSec === 0 && !autoSubmitted.current && !finishing) {
+      autoSubmitted.current = true;
+      void finish();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remainingSec]);
+
   const unanswered = items.filter((i) => !saved[i.item_id]).length;
   const runState = current ? runs[current.item_id] : undefined;
 
@@ -163,7 +201,7 @@ function ExamRunner({ attempt }: { attempt: Attempt }) {
       <a className="skip-link" href="#exam-main">
         Skip to question
       </a>
-      <ExamTopBar alias={me?.alias ?? 'candidate'} level={attempt.level} levels={levels} p={p} />
+      <ExamTopBar alias={me?.alias ?? 'candidate'} level={attempt.level} levels={levels} p={p} remainingSec={remainingSec} />
       <div className="exam-body">
         <nav className="exam-nav" aria-label="Questions">
           <h2 style={{ fontSize: '1rem' }}>Questions</h2>
@@ -374,21 +412,34 @@ const STATUS_TEXT: Record<RunResult['status'], string> = {
 function RunPanel({ result }: { result: RunResult | 'running' | 'error' | undefined }) {
   if (!result || result === 'running') return null;
   if (result === 'error') return <Alert kind="error">The check did not run. Your code is still in the box. Try again.</Alert>;
+  const passedCount = result.tests.filter((t) => t.passed).length;
   return (
     <section className="panel" aria-label="Test results">
-      <h2 style={{ fontSize: '1rem' }}>{STATUS_TEXT[result.status]}</h2>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <h2 style={{ fontSize: '1rem', margin: 0 }}>{STATUS_TEXT[result.status]}</h2>
+        {result.tests.length > 0 ? (
+          <span className={`chip ${result.status === 'passed' ? 'success' : 'error'}`}>
+            {passedCount} / {result.tests.length} passed
+          </span>
+        ) : null}
+      </div>
       {result.tests.length > 0 ? (
-        <ul className="checklist">
-          {result.tests.map((t) => (
-            <li key={t.id}>
-              <span aria-hidden="true">{t.passed ? '✓' : '×'}</span>
-              <span>
-                <strong>{t.passed ? 'Passed' : 'Not passed'}:</strong> {t.id}
-                {t.message_safe ? ` - ${t.message_safe}` : ''}
+        <ol className="test-case-grid" aria-label="Test cases">
+          {result.tests.map((t, i) => (
+            <li key={t.id} className="test-case" data-passed={t.passed}>
+              <span className="test-case-badge" aria-hidden="true">
+                {t.passed ? '✓' : '×'}
+              </span>
+              <span className="test-case-body">
+                <span className="test-case-title">
+                  Case {i + 1} <span className="sr-only">: {t.id}</span>
+                  <span className="muted small"> — {t.passed ? 'Passed' : 'Not passed'}</span>
+                </span>
+                {t.message_safe ? <span className="test-case-msg">{t.message_safe}</span> : null}
               </span>
             </li>
           ))}
-        </ul>
+        </ol>
       ) : null}
       {result.diff && result.diff.lines.length > 0 ? (
         <div>

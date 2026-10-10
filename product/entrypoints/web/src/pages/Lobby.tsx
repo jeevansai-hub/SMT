@@ -11,7 +11,7 @@ import { LEVEL_INFO } from './Path';
 
 const STEPS = ['Confirm', 'Consent', 'Network', 'Camera and mic', 'Screen', 'Full screen', 'Rules and start'] as const;
 export const CONSENT_VERSION = '2026-10-v1';
-const SCOPES = ['camera_microphone', 'screen', 'integrity_events'];
+const SCOPES = ['camera', 'microphone', 'screen', 'events'];
 
 export function LobbyPage() {
   const { level: levelParam } = useParams();
@@ -72,6 +72,23 @@ export function LobbyPage() {
     return () => document.removeEventListener('fullscreenchange', onFs);
   }, []);
 
+  const [levelStatus, setLevelStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    api.progress().then((p) => {
+      if (!active) return;
+      const cur = p.levels.find((l) => l.level === level);
+      if (cur) {
+        setLevelStatus(cur.status);
+        if (cur.status === 'passed') {
+          setError(`You have already passed Level ${level}. Return to My path to continue.`);
+        }
+      }
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [level]);
+
   const fail = (m: string) => setError(m);
 
   const confirmIdentity = async () => {
@@ -86,8 +103,19 @@ export function LobbyPage() {
       setAttemptId(a.attempt_id);
       setConsentRequired(a.consent_required);
       setStep(a.consent_required ? 1 : 2);
-    } catch {
-      fail('We could not start this level. Your work is saved. Try again.');
+    } catch (err: unknown) {
+      const apiErr = err as { code?: string; messageDetail?: string };
+      if (apiErr?.code === 'already_passed' || apiErr?.messageDetail === 'already passed') {
+        setLevelStatus('passed');
+        fail(`You have already passed Level ${level}. Return to My path to continue.`);
+      } else if (apiErr?.code === 'level_locked' || apiErr?.messageDetail === 'level locked') {
+        setLevelStatus('locked');
+        fail(`Level ${level} is locked. Complete the earlier levels first.`);
+      } else if (apiErr?.code === 'awaiting_review' || apiErr?.messageDetail === 'awaiting review') {
+        fail(`Level ${level} is currently awaiting human review.`);
+      } else {
+        fail('We could not start this level. Your work is saved. Try again.');
+      }
     } finally {
       setBusy(false);
     }
@@ -196,9 +224,12 @@ export function LobbyPage() {
 
   if (!valid) {
     return (
-      <div className="container">
-        <PageHeading>Level not found</PageHeading>
-        <Link to="/path">Back to My path</Link>
+      <div className="lobby-shell">
+        <LobbyTopBar />
+        <div className="container">
+          <PageHeading>Level not found</PageHeading>
+          <Link to="/path">Back to My path</Link>
+        </div>
       </div>
     );
   }
@@ -206,18 +237,15 @@ export function LobbyPage() {
   const gaugePct = netProgress?.mbps !== undefined ? Math.min(100, (netProgress.mbps / 50) * 100) : netState === 'running' ? 15 : net ? Math.min(100, (net.downMbps / 50) * 100) : 0;
 
   return (
-    <div className="container narrow" style={{ maxWidth: 760 }}>
-      <p className="brand">Crucible</p>
-      <ol className="wizard-steps" aria-label="Check-in steps">
-        {STEPS.map((s, i) => (
-          <li key={s} aria-current={i === step ? 'step' : undefined} data-done={i < step}>
-            {s}
-            <span className="sr-only">{i < step ? ' (done)' : i === step ? ' (current)' : ''}</span>
-          </li>
-        ))}
-      </ol>
-      <main id="main">
-        <h1 tabIndex={-1} ref={heading}>
+    <div className="lobby-shell">
+      <a className="skip-link" href="#lobby-main">
+        Skip to content
+      </a>
+      <LobbyTopBar />
+      <div id="lobby-main" style={{ maxWidth: 980, margin: '0 auto', padding: 'var(--space-5) var(--space-4)' }}>
+      <div style={{ marginBottom: 20 }}>
+        <span className="eyebrow">Crucible Proctored Engine • Standardized Workforce Benchmark</span>
+        <h1 tabIndex={-1} ref={heading} style={{ marginBottom: 6, fontSize: '1.85rem' }}>
           {step === 0 && `Level ${level}: ${LEVEL_INFO[level].name}`}
           {step === 1 && 'Your consent'}
           {step === 2 && 'Check your connection'}
@@ -226,19 +254,70 @@ export function LobbyPage() {
           {step === 5 && 'Enter full screen'}
           {step === 6 && 'Rules, then start'}
         </h1>
-        {error ? <Alert kind="error">{error}</Alert> : null}
+        <p className="muted" style={{ fontSize: '0.9375rem', margin: 0 }}>
+          {LEVEL_INFO[level].blurb}
+        </p>
+      </div>
 
-        {step === 0 && (
-          <section aria-labelledby="who">
-            <h2 id="who" className="sr-only">
-              Confirm who you are and your track
-            </h2>
-            <p>{LEVEL_INFO[level].blurb}</p>
-            <div className="panel">
-              <p style={{ margin: 0 }}>
-                You are signed in as <strong className="mono">{me?.alias ?? me?.display_name ?? 'learner'}</strong>.
-              </p>
-            </div>
+      {/* Mandatory System Permissions Banner (Image 1 Component) */}
+      <div className="lms-requirement-banner">
+        <div className="lms-requirement-header">
+          <span className="lms-badge-gold">
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+              verified_user
+            </span>
+            MANDATORY SYSTEM PERMISSIONS REQUIREMENT
+          </span>
+          <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>
+            Proctored Assessment Flow
+          </span>
+        </div>
+        <h3>The system requires all browser permissions to be switched ON before starting</h3>
+        <p>
+          To ensure test integrity and prevent automated invalidation, please switch on Camera, Microphone, Entire Screen
+          Sharing, and Fullscreen Window when entering the exam lobby.
+        </p>
+        <div className="lms-permission-chips">
+          <div className="lms-permission-chip">
+            <span className="material-symbols-outlined text-sm">videocam</span>
+            <span>Camera (Required)</span>
+          </div>
+          <div className="lms-permission-chip">
+            <span className="material-symbols-outlined text-sm">mic</span>
+            <span>Microphone (Required)</span>
+          </div>
+          <div className="lms-permission-chip">
+            <span className="material-symbols-outlined text-sm">screen_share</span>
+            <span>Entire Screen (Required)</span>
+          </div>
+          <div className="lms-permission-chip">
+            <span className="material-symbols-outlined text-sm">fullscreen</span>
+            <span>Full Screen (Required)</span>
+          </div>
+        </div>
+      </div>
+
+      <ol className="wizard-steps" aria-label="Check-in steps">
+        {STEPS.map((s, i) => (
+          <li key={s} aria-current={i === step ? 'step' : undefined} data-done={i < step}>
+            {s}
+            <span className="sr-only">{i < step ? ' (done)' : i === step ? ' (current)' : ''}</span>
+          </li>
+        ))}
+      </ol>
+
+      {error ? <Alert kind="error">{error}</Alert> : null}
+
+      {step === 0 && (
+        <section aria-labelledby="who" className="panel">
+          <h2 id="who" className="sr-only">
+            Confirm who you are and your track
+          </h2>
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ margin: 0, fontSize: '0.875rem' }}>
+              You are signed in as <strong className="mono" style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: 6 }}>{me?.alias ?? me?.display_name ?? 'learner'}</strong>.
+            </p>
+          </div>
             <Field id="track" label="Your track" hint="This is a preference. You can change it before you start.">
               {(p) => (
                 <select {...p} value={track} onChange={(e) => setTrack(e.target.value as Track)}>
@@ -254,9 +333,15 @@ export function LobbyPage() {
               <Link className="btn quiet" to="/path">
                 Back to My path
               </Link>
-              <button type="button" className="btn" disabled={!track || busy} onClick={() => void confirmIdentity()}>
-                Continue
-              </button>
+              {levelStatus === 'passed' ? (
+                <Link className="btn" to="/path">
+                  Continue on My path
+                </Link>
+              ) : (
+                <button type="button" className="btn" disabled={!track || busy} onClick={() => void confirmIdentity()}>
+                  Continue
+                </button>
+              )}
             </div>
           </section>
         )}
@@ -452,7 +537,20 @@ export function LobbyPage() {
             </div>
           </section>
         )}
-      </main>
+      </div>
     </div>
+  );
+}
+
+function LobbyTopBar() {
+  return (
+    <header className="lobby-top">
+      <Link to="/" className="brand" aria-label="Crucible home">
+        Crucible
+      </Link>
+      <Link to="/path" className="btn quiet">
+        Exit to My path
+      </Link>
+    </header>
   );
 }

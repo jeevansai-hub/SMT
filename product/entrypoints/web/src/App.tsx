@@ -45,10 +45,10 @@ export function AppRoutes() {
       <Route path="/login" element={<AuthPage mode="login" />} />
       <Route path="/register" element={<AuthPage mode="register" />} />
 
-      {/* Full-screen exam surfaces, no site chrome */}
+      {/* Full-screen, focused proctored-exam surfaces: no LMS chrome, no institutional nav */}
+      <Route path="/lobby/:level" element={<Guard><LobbyPage /></Guard>} />
       <Route path="/exam/:attemptId" element={<Guard><ExamPage /></Guard>} />
       <Route path="/interview/:attemptId" element={<Guard><InterviewPage /></Guard>} />
-      <Route path="/lobby/:level" element={<Guard><LobbyPage /></Guard>} />
 
       <Route element={<Guard><Layout /></Guard>}>
         <Route path="/path" element={<PathPage />} />

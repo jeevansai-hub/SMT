@@ -84,6 +84,15 @@ function InterviewRunner({ attemptId, initial }: { attemptId: string; initial: I
   }, [prompt?.index]);
 
   useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
+
+  useEffect(() => {
     if (readAloud && prompt && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(new SpeechSynthesisUtterance(prompt.text));
