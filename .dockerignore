@@ -1,0 +1,13 @@
+node_modules
+.git
+**/__pycache__
+**/*.pyc
+.venv
+venv
+*.db
+data/
+product/entrypoints/web/node_modules
+product/entrypoints/web/dist
+ui-screens/node_modules
+ui-screens/src
+functions
